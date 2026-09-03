@@ -6,13 +6,16 @@ export default function AboutPage() {
     <main className="about-page">
       <Link href="/">← Vitour Xpress</Link>
       <div>
-        <Image
-          src="/images/ceo.webp"
-          alt="Raphael Okumu Opany, CEO of Vitour Xpress"
-          width={600}
-          height={500}
-          priority
-        />
+        <div style={{ position: "relative", width: "100%", height: 440 }}>
+          <Image
+            src="/images/ceo.webp"
+            alt="Raphael Okumu Opany, CEO of Vitour Xpress"
+            fill
+            sizes="(max-width: 640px) 100vw, 50vw"
+            style={{ objectFit: "contain", background: "#fff" }}
+            priority
+          />
+        </div>
         <section>
           <p className="eyebrow">ABOUT OUR CEO</p>
           <h1>Raphael Okumu Opany</h1>
