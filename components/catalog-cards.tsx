@@ -18,9 +18,25 @@ export function CatalogCards({ featured = false }: { featured?: boolean }) {
   const [products, setProducts] = useState<Product[] | null>(null);
   const [error, setError] = useState("");
 
-  useEffect(() => (featured ? listenToFeaturedProducts(setProducts, () => setError("We could not load the catalogue.")) : listenToProducts(setProducts, () => setError("We could not load the catalogue."))), [featured]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setError("The catalogue is taking longer than expected to load."), 12_000);
+    const onProducts = (nextProducts: Product[]) => {
+      window.clearTimeout(timeout);
+      setProducts(nextProducts);
+      setError("");
+    };
+    const onError = () => {
+      window.clearTimeout(timeout);
+      setError("We could not load the catalogue.");
+    };
+    const stop = featured ? listenToFeaturedProducts(onProducts, onError) : listenToProducts(onProducts, onError);
+    return () => {
+      window.clearTimeout(timeout);
+      stop();
+    };
+  }, [featured]);
 
-  if (error) return <p className="catalog-message">{error} Please try again shortly.</p>;
+  if (error) return <p className="catalog-message" role="alert">{error} Please try again shortly.</p>;
   if (!products) return <div className="catalog-grid">{Array.from({ length: 4 }, (_, index) => <div className="catalog-skeleton" key={index} />)}</div>;
   if (!products.length) return <div className="catalog-empty"><b>New stock is being added.</b><span>Our catalogue will appear here as products are uploaded.</span></div>;
 
