@@ -1,2 +1,7 @@
+import { OrdersClient } from "@/components/orders-client";
 import { StaffGate } from "@/components/staff-gate";
-export default function OrdersPage() { return <StaffGate permission="ORDERS"><main className="module-page"><p className="eyebrow">ONLINE ORDERS</p><h2>Order fulfilment</h2><p>New website orders are stored in the orders collection with immutable item, cost, and price snapshots. This screen is ready to surface New, Confirmed, Preparing, Ready for Pickup, Out for Delivery, Completed, and Cancelled statuses.</p></main></StaffGate>; }
+import "./orders.css";
+
+export default function OrdersPage() {
+  return <StaffGate permission="ORDERS"><OrdersClient /></StaffGate>;
+}

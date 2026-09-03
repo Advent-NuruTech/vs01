@@ -7,5 +7,11 @@ export async function POST(request: Request) {
     const parsed = saleSchema.safeParse(await request.json());
     if (!parsed.success) return Response.json({ error: "Invalid sale data.", fields: parsed.error.flatten() }, { status: 400 });
     return Response.json(await finalizeSale(parsed.data, employee.uid), { status: 201 });
-  } catch (error) { return error instanceof Response ? error : Response.json({ error: error instanceof Error ? error.message : "Sale could not be completed." }, { status: 400 }); }
+  } catch (error) {
+    if (error instanceof Response) {
+      const message = await error.text();
+      return Response.json({ error: message || "Sale could not be completed." }, { status: error.status });
+    }
+    return Response.json({ error: error instanceof Error ? error.message : "Sale could not be completed." }, { status: 400 });
+  }
 }

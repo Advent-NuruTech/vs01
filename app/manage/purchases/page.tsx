@@ -1,2 +1,6 @@
+import { PurchasesClient } from "@/components/purchases-client";
 import { StaffGate } from "@/components/staff-gate";
-export default function PurchasesPage() { return <StaffGate permission="INVENTORY"><main className="module-page"><p className="eyebrow">RESTOCKING</p><h2>Purchases & suppliers</h2><p>Receive supplier stock through inventory movements only. Purchase price snapshots update current cost without changing historic sale margins.</p></main></StaffGate>; }
+
+export default function PurchasesPage() {
+  return <StaffGate permission="INVENTORY"><PurchasesClient /></StaffGate>;
+}

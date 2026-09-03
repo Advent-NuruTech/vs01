@@ -1,5 +1,7 @@
+import { ReportsClient } from "@/components/reports-client";
 import { StaffGate } from "@/components/staff-gate";
+import "./reports.css";
 
 export default function ReportsPage() {
-  return <StaffGate permission="FINANCE"><main className="module-page"><p className="eyebrow">REPORTING</p><h2>Reports</h2><p>Sales, profit, expense, inventory valuation, customer balance, supplier purchase, service, and mechanic reports use indexed completed transactions.</p></main></StaffGate>;
+  return <StaffGate permission="FINANCE"><ReportsClient /></StaffGate>;
 }

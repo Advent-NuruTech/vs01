@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 
-const links = [["/manage", "Dashboard"], ["/manage/sell", "Sell / POS"], ["/manage/orders", "Orders"], ["/manage/inventory", "Inventory"], ["/manage/garage", "Services / Garage"], ["/manage/customers", "Customers"], ["/manage/purchases", "Purchases"], ["/manage/expenses", "Expenses"], ["/manage/finance", "Finance"], ["/manage/reports", "Reports"], ["/manage/settings", "Settings"]];
+const links = [["/manage", "Dashboard"], ["/manage/sell", "Sell / POS"], ["/manage/sales", "Sales History"], ["/manage/orders", "Orders"], ["/manage/inventory", "Inventory"], ["/manage/garage", "Services / Garage"], ["/manage/customers", "Customers"], ["/manage/purchases", "Purchases"], ["/manage/expenses", "Expenses"], ["/manage/finance", "Finance"], ["/manage/reports", "Reports"], ["/manage/settings", "Settings"]];
 
 export default function ManageLayout({ children }: { children: React.ReactNode }) {
   const path = usePathname();

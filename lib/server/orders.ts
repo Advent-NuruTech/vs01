@@ -25,10 +25,12 @@ export async function createOnlineOrder(input: z.infer<typeof checkoutSchema>, c
     });
     const total = rows.reduce((sum, row) => sum + row.lineTotal, 0);
     const counterRef = db.collection("settings").doc("counters");
-    const counter = await transaction.get(counterRef);
+    const businessSettingsRef = db.collection("settings").doc("business");
+    const [counter, businessSettings] = await Promise.all([transaction.get(counterRef), transaction.get(businessSettingsRef)]);
     const number = (counter.data()?.orderSequence ?? 0) + 1;
     const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
-    const orderNumber = `VX-${date}-${String(number).padStart(4, "0")}`;
+    const orderPrefix = businessSettings.data()?.orderPrefix ?? "VX";
+    const orderNumber = `${orderPrefix}-${date}-${String(number).padStart(4, "0")}`;
     const customerQuery = db.collection("customers").where("phone", "==", input.customer.phone).limit(1);
     const matches = await transaction.get(customerQuery);
     const customerRef = matches.empty ? db.collection("customers").doc() : matches.docs[0].ref;
