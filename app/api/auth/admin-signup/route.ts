@@ -28,12 +28,22 @@ export async function POST(request: Request) {
   const configuredSecret = process.env.SIGNUP_ADMIN_SECRET;
   if (!configuredSecret || !validSecret(parsed.data.secret, configuredSecret)) return Response.json({ error: "We could not create that administrator account." }, { status: 403 });
 
+  let createdUserId: string | undefined;
+
   try {
     const email = parsed.data.email.toLowerCase();
     const user = await adminAuth().createUser({ email, password: parsed.data.password });
+    createdUserId = user.uid;
     await adminDb().collection("users").doc(user.uid).set({ email, role: "ADMIN", active: true, createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
     return Response.json({ email }, { status: 201 });
   } catch (error) {
+    if (createdUserId) {
+      try {
+        await adminAuth().deleteUser(createdUserId);
+      } catch (cleanupError) {
+        console.error("Administrator signup rollback failed", cleanupError);
+      }
+    }
     const code = typeof error === "object" && error && "code" in error ? String(error.code) : "";
     if (code === "auth/email-already-exists") return Response.json({ error: "An account already exists for that email. Please sign in." }, { status: 409 });
     console.error("Administrator signup failed", error);
