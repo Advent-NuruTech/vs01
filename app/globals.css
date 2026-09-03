@@ -22,6 +22,8 @@
 .motion-ready .reveal-stagger [data-reveal]:nth-child(3){transition-delay:.16s}
 .motion-ready .reveal-stagger [data-reveal]:nth-child(4){transition-delay:.24s}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.motion-ready [data-reveal]{opacity:1;transform:none;transition:none}}
+.footer-credit{color:#aeb6c3;transition:color .18s ease}
+.footer-credit:hover{color:#fff}
 
 /* Public nav */
 .pn-header{height:72px;background:#fff;border-bottom:1px solid #e8ebef;position:sticky;top:0;z-index:45}.pn-inner{width:min(1180px,calc(100% - 48px));margin:0 auto;height:100%;display:flex;align-items:center;gap:24px}.pn-logo{flex:0 0 auto;display:flex;align-items:center}.pn-logo img{height:44px;width:auto}.pn-cart{position:relative;display:flex;align-items:center;color:#273142;padding:8px;border-radius:6px;transition:background .15s}.pn-cart:hover{background:#f2f4f7}.pn-cart svg{display:block}.pn-cart-count{position:absolute;top:2px;right:0;background:var(--red);color:#fff;border-radius:50%;width:17px;height:17px;display:grid;place-items:center;font-size:10px;font-weight:800;line-height:1}.pn-nav{display:flex;align-items:center;gap:24px;margin-left:auto}.pn-nav a{color:#333b48;font-size:14px;font-weight:700;transition:color .15s;white-space:nowrap}.pn-nav a:hover{color:var(--red)}.pn-menu-btn{display:none;border:0;background:transparent;font-size:24px;color:var(--blue-deep);line-height:1;padding:4px;flex-shrink:0}.pn-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
