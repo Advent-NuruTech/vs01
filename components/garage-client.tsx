@@ -25,6 +25,20 @@ type ServiceJob = {
   createdAt?: { toDate: () => Date };
 };
 
+type ServiceRequest = {
+  id: string;
+  requestNumber: string;
+  serviceName: string;
+  customerName: string;
+  customerPhone: string;
+  vehicleRegistration: string;
+  vehicleDescription?: string | null;
+  preferredDate?: string | null;
+  notes?: string | null;
+  status: "NEW" | "CONTACTED" | "BOOKED" | "CLOSED";
+  createdAt?: { toDate: () => Date };
+};
+
 type PaymentDraft = { amount: string; method: PaymentMethod };
 
 const money = (value: number) => `KES ${value.toLocaleString("en-KE")}`;
@@ -49,7 +63,9 @@ function paymentLabel(status: ServiceJob["paymentStatus"]) {
 export function GarageClient() {
   const token = useStaffToken();
   const [jobs, setJobs] = useState<ServiceJob[] | null>(null);
+  const [requests, setRequests] = useState<ServiceRequest[] | null>(null);
   const [loadError, setLoadError] = useState("");
+  const [requestLoadError, setRequestLoadError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [saving, setSaving] = useState(false);
@@ -68,6 +84,15 @@ export function GarageClient() {
       setLoadError("");
     },
     () => setLoadError("Unable to load service jobs. Check your connection and refresh the page."),
+  ), []);
+
+  useEffect(() => onSnapshot(
+    query(collection(db, "serviceRequests"), orderBy("createdAt", "desc"), limit(100)),
+    (snapshot) => {
+      setRequests(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as ServiceRequest));
+      setRequestLoadError("");
+    },
+    () => setRequestLoadError("Unable to load website service requests. Check your connection and refresh the page."),
   ), []);
 
   const summary = useMemo(() => (jobs ?? []).reduce((current, job) => ({
@@ -155,6 +180,16 @@ export function GarageClient() {
     });
   };
 
+  const requestWhatsAppUrl = (request: ServiceRequest) => {
+    const message = [
+      `Hello ${request.customerName}, this is Vitour Xpress regarding your service request ${request.requestNumber}.`,
+      `Service: ${request.serviceName}`,
+      `Vehicle: ${request.vehicleRegistration}${request.vehicleDescription ? ` · ${request.vehicleDescription}` : ""}`,
+    ].join("\n");
+    const phone = request.customerPhone.replace(/\D/g, "").replace(/^0/, "254");
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  };
+
   const recordPayment = async (job: ServiceJob) => {
     if (!token) {
       setPaymentError("Your staff sign-in is still being verified. Please wait a moment, then try again.");
@@ -206,6 +241,45 @@ export function GarageClient() {
 
   return (
     <div className="gr-view">
+      <section className="gr-requests">
+        <div className="gr-jobs-header">
+          <div>
+            <h2>Website service requests</h2>
+            <span className="gr-live-badge">● Live</span>
+          </div>
+          <span className="gr-jobs-count">{requests === null ? "Loading..." : `${requests.length} request(s)`}</span>
+        </div>
+        {requestLoadError && <p className="form-error" role="alert">{requestLoadError}</p>}
+        {!requestLoadError && requests === null && <p className="gr-empty">Loading website requests...</p>}
+        {!requestLoadError && requests?.length === 0 && <p className="gr-empty">No website service requests have been submitted yet.</p>}
+        {requests && requests.length > 0 && (
+          <div className="gr-request-grid">
+            {requests.map((request) => (
+              <article className="gr-request-card" key={request.id}>
+                <div className="gr-request-topline">
+                  <div>
+                    <b>{request.requestNumber}</b>
+                    <small>{dateLabel(request.createdAt)}</small>
+                  </div>
+                  <span className="gr-badge gr-badge-blue">{request.status === "NEW" ? "New request" : request.status.toLowerCase()}</span>
+                </div>
+                <h3>{request.serviceName}</h3>
+                <div className="gr-request-details">
+                  <span><b>Customer</b>{request.customerName}</span>
+                  <span><b>Phone</b>{request.customerPhone}</span>
+                  <span><b>Vehicle</b>{request.vehicleRegistration}{request.vehicleDescription ? ` · ${request.vehicleDescription}` : ""}</span>
+                  <span><b>Preferred date</b>{request.preferredDate || "Flexible"}</span>
+                </div>
+                {request.notes && <p className="gr-request-notes">{request.notes}</p>}
+                <a className="gr-request-whatsapp" href={requestWhatsAppUrl(request)} target="_blank" rel="noreferrer">
+                  Reply on WhatsApp ↗
+                </a>
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+
       <section className="gr-panel">
         <div className="gr-panel-intro">
           <p className="eyebrow">WORKSHOP CONTROL</p>

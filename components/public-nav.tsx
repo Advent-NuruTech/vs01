@@ -42,7 +42,7 @@ export function PublicNav({ home = false }: { home?: boolean }) {
         <nav className={menu ? "pn-nav open" : "pn-nav"}>
           {home ? (
             <>
-              <a href="#shop" onClick={() => setMenu(false)}>Shop tyres</a>
+              <Link href="/shop" onClick={() => setMenu(false)}>Shop tyres</Link>
               <a href="#services" onClick={() => setMenu(false)}>Services</a>
               <a href="#about" onClick={() => setMenu(false)}>Our story</a>
               <a href="#contact" onClick={() => setMenu(false)}>Contact</a>

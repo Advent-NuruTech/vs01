@@ -79,7 +79,7 @@ export function ProductDetail({ slug }: { slug: string }) {
 
   const price = product.onlinePrice ?? product.sellingPrice;
   const images = product.imageUrls.length ? product.imageUrls : [];
-  const currentImage = product.featuredImageUrl ?? images[imgIdx] ?? null;
+  const currentImage = images[imgIdx] ?? product.featuredImageUrl ?? null;
   const inStock = product.quantityInStock > 0;
   const cartCount = readCart().reduce((n, l) => n + l.quantity, 0);
 

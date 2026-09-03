@@ -2,13 +2,52 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { CatalogCards } from "@/components/catalog-cards";
 import { PublicNav } from "@/components/public-nav";
 
 export default function Home() {
+  const heroText = "Quality tyres, precision fitting and honest automotive care. Get road-ready with the experts who keep Kenya moving.";
+  const [displayed, setDisplayed] = useState("");
+  const [cursorVisible, setCursorVisible] = useState(true);
   const [query, setQuery] = useState("");
   const [finder, setFinder] = useState({ width: "205", profile: "55", rim: "16" });
+
+  useEffect(() => {
+    let i = 0;
+    let deleting = false;
+    let firstPlay = true;
+
+    const step = () => {
+      if (!deleting) {
+        i++;
+        setDisplayed(heroText.slice(0, i));
+        if (i >= heroText.length) {
+          // full word typed, pause, then start deleting
+          setTimeout(() => { deleting = true; firstPlay = false; timeoutId = setTimeout(step, 50); }, firstPlay ? 1800 : 2500);
+          return;
+        }
+        timeoutId = setTimeout(step, 55);
+      } else {
+        i--;
+        setDisplayed(heroText.slice(0, i));
+        if (i <= 0) {
+          deleting = false;
+          timeoutId = setTimeout(step, 400);
+          return;
+        }
+        timeoutId = setTimeout(step, firstPlay ? 45 : 32);
+      }
+    };
+
+    let timeoutId: ReturnType<typeof setTimeout> = setTimeout(step, 500);
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  useEffect(() => {
+    const blink = setInterval(() => setCursorVisible((v) => !v), 530);
+    return () => clearInterval(blink);
+  }, []);
 
   const findTyres = (event: FormEvent) => {
     event.preventDefault();
@@ -21,7 +60,7 @@ export default function Home() {
       <div className="topbar"><div className="wrap topbar-inner"><span>Open today <strong>8:00 AM – 6:00 PM</strong></span><span className="top-contact">Need help? <a href="tel:+254700000000">+254 700 000 000</a></span></div></div>
       <PublicNav home />
 
-      <section className="hero"><div className="hero-grid" /><div className="wrap hero-content"><div className="hero-copy"><p className="eyebrow light">VITOUR XPRESS · KENYA</p><h1>Drive with <strong>confidence.</strong></h1><p className="hero-text">Quality tyres, precision fitting and honest automotive care. Get road-ready with the experts who keep Kenya moving.</p><div className="hero-buttons"><a href="#shop" className="button button-red">Shop tyres <span>→</span></a><a href="#services" className="button button-ghost">Explore services</a></div><div className="trust-row"><div><b>10,000+</b><span>Tyres fitted</span></div><div><b>4.9 / 5</b><span>Customer rating</span></div><div></div></div></div><div className="hero-visual"><div className="speed-ring ring-one" /><div className="speed-ring ring-two" /><div className="wheel"><div className="wheel-inner"><span /><span /><span /><span /><span /></div></div><div className="floating-card"><span className="check">✓</span><div><b>Fitted with care</b><small>Expert installation included</small></div></div></div></div></section>
+      <section className="hero"><div className="hero-grid" /><div className="wrap hero-content"><div className="hero-copy"><p className="eyebrow light">VITOUR XPRESS · KENYA</p><h1>Drive with <strong>confidence.</strong></h1><p className="hero-text">{displayed}<span className="hero-cursor" style={{ opacity: cursorVisible ? 1 : 0 }}>|</span></p><div className="hero-buttons"><a href="#shop" className="button button-red">Shop tyres <span>→</span></a><a href="#services" className="button button-ghost">Explore services</a></div><div className="trust-row"><div><b>10,000+</b><span>Tyres fitted</span></div><div><b>4.9 / 5</b><span>Customer rating</span></div><div></div></div></div><div className="hero-visual"><div className="speed-ring ring-one" /><div className="speed-ring ring-two" /><div className="wheel"><div className="wheel-inner"><span /><span /><span /><span /><span /></div></div><div className="floating-card"><span className="check">✓</span><div><b>Fitted with care</b><small>Expert installation included</small></div></div></div></div></section>
 
       <section className="finder-section" id="tyre-finder"><div className="wrap finder-wrap"><div className="finder-title"><p className="eyebrow">FIND YOUR FIT</p><h2>What size tyre do you need?</h2></div><form className="finder-form" onSubmit={findTyres}><label>Width<select value={finder.width} onChange={(e) => setFinder({ ...finder, width: e.target.value })}><option>205</option><option>195</option><option>225</option><option>265</option></select></label><span className="slash">/</span><label>Profile<select value={finder.profile} onChange={(e) => setFinder({ ...finder, profile: e.target.value })}><option>55</option><option>65</option><option>45</option><option>70</option></select></label><label>Rim<select value={finder.rim} onChange={(e) => setFinder({ ...finder, rim: e.target.value })}><option>16</option><option>15</option><option>17</option><option>18</option></select></label><button className="find-button" type="submit">Find tyres <span>→</span></button></form><p className="finder-help">Not sure what fits? <a href="#contact">Talk to a tyre expert</a></p></div></section>
 

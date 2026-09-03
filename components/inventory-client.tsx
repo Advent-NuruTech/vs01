@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- Uploaded Cloudinary previews are displayed from runtime URLs. */
 
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
@@ -7,6 +8,8 @@ import type { Product } from "@/lib/domain";
 import { useStaffToken } from "./staff-gate";
 
 const money = (value: number) => `KES ${value.toLocaleString("en-KE")}`;
+const MAX_PRODUCT_IMAGES = 8;
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
 export function InventoryClient() {
   const token = useStaffToken();
@@ -15,6 +18,8 @@ export function InventoryClient() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -36,27 +41,81 @@ export function InventoryClient() {
   }, []);
 
   const upload = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !token) return;
+    const input = event.currentTarget;
+    const files = Array.from(input.files ?? []);
+    if (!files.length) return;
+
     setError("");
-    const signature = await fetch("/api/cloudinary/signature", { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ kind: "product" }) });
-    const signed = await signature.json();
-    if (!signature.ok) return setError(signed.error ?? "Image upload is unavailable.");
-    const data = new FormData();
-    data.set("file", file);
-    data.set("api_key", signed.apiKey);
-    data.set("timestamp", String(signed.timestamp));
-    data.set("folder", signed.folder);
-    data.set("signature", signed.signature);
-    const uploaded = await fetch(`https://api.cloudinary.com/v1_1/${signed.cloudName}/image/upload`, { method: "POST", body: data });
-    const result = await uploaded.json();
-    if (!uploaded.ok) return setError(result.error?.message ?? "Image upload failed.");
-    setImages((current) => [...current, result.secure_url]);
+    setUploadStatus("");
+
+    if (!token) {
+      setError("Your staff session is not ready. Please sign in again before uploading.");
+      input.value = "";
+      return;
+    }
+
+    if (images.length + files.length > MAX_PRODUCT_IMAGES) {
+      setError(`You can upload up to ${MAX_PRODUCT_IMAGES} product images.`);
+      input.value = "";
+      return;
+    }
+
+    const invalidFile = files.find((file) => !file.type.startsWith("image/") || file.size > MAX_IMAGE_SIZE);
+    if (invalidFile) {
+      setError(!invalidFile.type.startsWith("image/")
+        ? `${invalidFile.name} is not an image.`
+        : `${invalidFile.name} is larger than 10 MB.`);
+      input.value = "";
+      return;
+    }
+
+    setUploading(true);
+    const uploadedUrls: string[] = [];
+    try {
+      const signature = await fetch("/api/cloudinary/signature", { method: "POST", headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ kind: "product" }) });
+      const signed = await signature.json().catch(() => ({}));
+      if (!signature.ok) { setError(signed.error ?? "Image upload is unavailable."); return; }
+
+      for (const [index, file] of files.entries()) {
+        setUploadStatus(`Uploading image ${index + 1} of ${files.length}...`);
+        const data = new FormData();
+        data.set("file", file);
+        data.set("api_key", signed.apiKey);
+        data.set("timestamp", String(signed.timestamp));
+        data.set("folder", signed.folder);
+        data.set("signature", signed.signature);
+        const uploaded = await fetch(`https://api.cloudinary.com/v1_1/${signed.cloudName}/image/upload`, { method: "POST", body: data });
+        const result = await uploaded.json().catch(() => ({}));
+        if (!uploaded.ok || typeof result.secure_url !== "string") {
+          throw new Error(result.error?.message ?? `${file.name} could not be uploaded.`);
+        }
+        uploadedUrls.push(result.secure_url);
+      }
+
+      setImages((current) => [...current, ...uploadedUrls]);
+      setUploadStatus(`${uploadedUrls.length} image${uploadedUrls.length === 1 ? "" : "s"} uploaded successfully.`);
+    } catch (uploadError) {
+      if (uploadedUrls.length) {
+        setImages((current) => [...current, ...uploadedUrls]);
+        setUploadStatus(`${uploadedUrls.length} image${uploadedUrls.length === 1 ? "" : "s"} uploaded successfully before the upload stopped.`);
+      } else {
+        setUploadStatus("");
+      }
+      setError(uploadError instanceof Error ? uploadError.message : "Image upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+      input.value = "";
+    }
+  };
+
+  const removeImage = (url: string) => {
+    setImages((current) => current.filter((image) => image !== url));
+    setUploadStatus("");
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!token) return;
+    if (!token || uploading) return;
     setSaving(true);
     setError("");
     const data = new FormData(event.currentTarget);
@@ -71,6 +130,7 @@ export function InventoryClient() {
     if (!response.ok) return setError(result.error ?? "Could not save product.");
     event.currentTarget.reset();
     setImages([]);
+    setUploadStatus("");
   };
 
   const inventoryMessage = inventoryError || (products === null ? "Loading inventory..." : !products.length ? "No products have been added yet." : "");
@@ -84,10 +144,17 @@ export function InventoryClient() {
         <label>Tyre size <small>(optional)</small><input name="tyreSize" placeholder="205/55 R16" /></label><label>Type / vehicle <input name="tyreType" placeholder="SUV, all-season..." /></label>
         <label>Cost price<input name="costPrice" type="number" min="0" required /></label><label>Selling price<input name="sellingPrice" type="number" min="1" required /></label><label>Online price <small>(optional)</small><input name="onlinePrice" type="number" min="1" /></label>
         <label>Opening stock<input name="initialStock" type="number" min="0" required /></label><label>Reorder level<input name="reorderLevel" type="number" min="0" required /></label>
-        <label className="image-upload">Product images<input type="file" accept="image/*" onChange={upload} />{images.length ? <span>{images.length} image(s) uploaded</span> : <span>Upload image (optional)</span>}</label>
+        <label className="image-upload">Product images<input type="file" accept="image/*" multiple onChange={upload} disabled={uploading || images.length >= MAX_PRODUCT_IMAGES} /><span>{images.length ? `${images.length} of ${MAX_PRODUCT_IMAGES} images ready` : "Upload up to 8 images (10 MB each)"}</span></label>
+        {images.length > 0 && <div className="image-previews" aria-label="Uploaded product images">
+          {images.map((url, index) => <figure key={url}>
+            <img src={url} alt={`Product preview ${index + 1}`} />
+            <button type="button" onClick={() => removeImage(url)} aria-label={`Remove product image ${index + 1}`}>Remove</button>
+          </figure>)}
+        </div>}
+        {uploadStatus && <p className="image-upload-status" role="status">{uploadStatus}</p>}
         <label className="check-label"><input type="checkbox" name="featured" /> Feature on website</label>
-        {error && <p className="form-error">{error}</p>}
-        <button className="button button-red" disabled={saving}>{saving ? "Saving..." : "Save product"}</button>
+        {error && <p className="form-error" role="alert">{error}</p>}
+        <button className="button button-red" disabled={saving || uploading}>{saving ? "Saving..." : uploading ? "Uploading image..." : "Save product"}</button>
       </form>
     </section>
     <section className="inventory-table">
