@@ -2,36 +2,25 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
-
-type Tyre = { id: number; size: string; name: string; type: string; price: number; old?: number; tag: string; accent: string };
-
-const tyres: Tyre[] = [
-  { id: 1, size: "205/55 R16", name: "Vitour Formula Z", type: "High performance", price: 12400, old: 13800, tag: "BEST SELLER", accent: "blue" },
-  { id: 2, size: "195/65 R15", name: "Vitour City Life", type: "Everyday comfort", price: 9850, tag: "POPULAR", accent: "red" },
-  { id: 3, size: "265/65 R17", name: "Vitour Galaxy R1", type: "SUV & 4x4", price: 18200, tag: "4×4 READY", accent: "green" },
-  { id: 4, size: "225/45 R17", name: "Vitour Sport Life", type: "Performance touring", price: 14800, tag: "NEW ARRIVAL", accent: "black" },
-];
-
-const money = (n: number) => `KES ${n.toLocaleString("en-KE")}`;
-
-function TyreMark({ accent = "blue" }: { accent?: string }) {
-  return <div className={`tyre-mark ${accent}`} aria-hidden="true"><i /><b /><em /><span /></div>;
-}
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { CatalogCards } from "@/components/catalog-cards";
+import { readCart } from "@/lib/cart";
+import type { CartLine } from "@/lib/domain";
 
 export default function Home() {
-  const [cart, setCart] = useState<number[]>([]);
+  const [cart, setCart] = useState<CartLine[]>([]);
   const [menu, setMenu] = useState(false);
   const [query, setQuery] = useState("");
   const [notice, setNotice] = useState("");
   const [finder, setFinder] = useState({ width: "205", profile: "55", rim: "16" });
 
-  const cartTotal = useMemo(() => cart.reduce((total, id) => total + (tyres.find((tyre) => tyre.id === id)?.price ?? 0), 0), [cart]);
-  const add = (id: number) => {
-    setCart((current) => [...current, id]);
-    setNotice("Added to your tyre basket");
-    window.setTimeout(() => setNotice(""), 2600);
-  };
+  const cartQuantity = useMemo(() => cart.reduce((total, item) => total + item.quantity, 0), [cart]);
+  useEffect(() => {
+    const syncCart = () => setCart(readCart());
+    syncCart();
+    window.addEventListener("vitour-cart-change", syncCart);
+    return () => window.removeEventListener("vitour-cart-change", syncCart);
+  }, []);
   const findTyres = (event: FormEvent) => {
     event.preventDefault();
     setQuery(`${finder.width}/${finder.profile} R${finder.rim}`);
@@ -48,7 +37,7 @@ export default function Home() {
           <nav className={menu ? "navlinks open" : "navlinks"}>
             <a href="#shop" onClick={() => setMenu(false)}>Shop tyres</a><a href="#services" onClick={() => setMenu(false)}>Services</a><a href="#about" onClick={() => setMenu(false)}>Our story</a><a href="#contact" onClick={() => setMenu(false)}>Contact</a>
           </nav>
-          <div className="nav-actions"><button className="search-button" onClick={() => document.getElementById("tyre-finder")?.scrollIntoView({ behavior: "smooth" })}>⌕ <span>Find tyres</span></button><button className="basket" onClick={() => setNotice(cart.length ? `${cart.length} tyre${cart.length > 1 ? "s" : ""} in your basket · ${money(cartTotal)}` : "Your basket is empty")}>Bag <b>{cart.length}</b></button></div>
+          <div className="nav-actions"><button className="search-button" onClick={() => document.getElementById("tyre-finder")?.scrollIntoView({ behavior: "smooth" })}>⌕ <span>Find tyres</span></button><Link className="basket" href="/cart">Bag <b>{cartQuantity}</b></Link></div>
         </div>
       </header>
 
@@ -58,7 +47,7 @@ export default function Home() {
 
       <section className="finder-section" id="tyre-finder"><div className="wrap finder-wrap"><div className="finder-title"><p className="eyebrow">FIND YOUR FIT</p><h2>What size tyre do you need?</h2></div><form className="finder-form" onSubmit={findTyres}><label>Width<select value={finder.width} onChange={(e) => setFinder({ ...finder, width: e.target.value })}><option>205</option><option>195</option><option>225</option><option>265</option></select></label><span className="slash">/</span><label>Profile<select value={finder.profile} onChange={(e) => setFinder({ ...finder, profile: e.target.value })}><option>55</option><option>65</option><option>45</option><option>70</option></select></label><label>Rim<select value={finder.rim} onChange={(e) => setFinder({ ...finder, rim: e.target.value })}><option>16</option><option>15</option><option>17</option><option>18</option></select></label><button className="find-button" type="submit">Find tyres <span>→</span></button></form><p className="finder-help">Not sure what fits? <a href="#contact">Talk to a tyre expert</a></p></div></section>
 
-      <section className="section products" id="shop"><div className="wrap"><div className="section-heading"><div><p className="eyebrow">ROAD-TESTED QUALITY</p><h2>Tyres for every journey.</h2></div><a className="text-link" href="#shop">View all tyres <span>→</span></a></div>{query && <div className="search-result">Showing tyres closest to <b>{query}</b><button onClick={() => setQuery("")}>Clear</button></div>}<div className="product-grid">{tyres.map((tyre) => <article className="product-card" key={tyre.id}><div className="product-art"><span className={`tag ${tyre.accent}`}>{tyre.tag}</span><TyreMark accent={tyre.accent} /><span className="size-badge">{tyre.size}</span></div><div className="product-info"><p className="product-type">{tyre.type}</p><h3>{tyre.name}</h3><div className="product-bottom"><div><strong>{money(tyre.price)}</strong>{tyre.old && <del>{money(tyre.old)}</del>}</div><button className="round-add" onClick={() => add(tyre.id)} aria-label={`Add ${tyre.name}`}>+</button></div></div></article>)}</div></div></section>
+      <section className="section products" id="shop"><div className="wrap"><div className="section-heading"><div><p className="eyebrow">ROAD-TESTED QUALITY</p><h2>Tyres for every journey.</h2></div><Link className="text-link" href="/shop">View all tyres <span>→</span></Link></div>{query && <div className="search-result">Showing products closest to <b>{query}</b><button onClick={() => setQuery("")}>Clear</button></div>}<CatalogCards featured /></div></section>
 
       <section className="brand-strip"><div className="wrap"><p>Trusted tyre brands, fitted by experts</p><div className="brands"><b>VITOUR</b><b>MICHELIN</b><b>BRIDGESTONE</b><b>GOODYEAR</b><b>PIRELLI</b></div></div></section>
 

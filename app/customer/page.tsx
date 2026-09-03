@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function CustomerPage() { return <main className="simple-page"><Link href="/">← Vitour Xpress</Link><p className="eyebrow">CUSTOMER PORTAL</p><h1>Your tyres, services and orders—together.</h1><p className="lead">Sign in with the account used at checkout to view active orders, purchase history, vehicles, service history, addresses, invoices and profile details.</p><a className="button button-blue" href="mailto:hello@vitourxpress.co.ke?subject=Customer portal access">Request account access</a></main>; }

@@ -1,6 +1,9 @@
 import { createHash } from "crypto";
+import { requireStaff } from "@/lib/server/auth";
 
 export async function POST(request: Request) {
+  try { await requireStaff(request, "INVENTORY"); }
+  catch (error) { return error instanceof Response ? error : Response.json({ error: "Unable to verify staff access." }, { status: 500 }); }
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;

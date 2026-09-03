@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function ContactPage() { return <main className="simple-page"><Link href="/">← Vitour Xpress</Link><p className="eyebrow">CONTACT & LOCATION</p><h1>Talk to a tyre expert.</h1><div className="contact-grid"><article><h2>Call</h2><a href="tel:+254700000000">+254 700 000 000</a></article><article><h2>Email</h2><a href="mailto:hello@vitourxpress.co.ke">hello@vitourxpress.co.ke</a></article><article><h2>Workshop hours</h2><p>Monday–Saturday · 8:00 AM–6:00 PM</p></article></div></main>; }

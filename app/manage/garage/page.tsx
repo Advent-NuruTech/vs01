@@ -1,0 +1,2 @@
+import { StaffGate } from "@/components/staff-gate";
+export default function GaragePage() { return <StaffGate permission="GARAGE"><main className="module-page"><p className="eyebrow">WORKSHOP CONTROL</p><h2>Garage job cards</h2><p>Service jobs, customer vehicles, mechanic assignments, parts consumed, labour snapshots, and status history belong in the serviceJobs and serviceJobItems collections.</p></main></StaffGate>; }

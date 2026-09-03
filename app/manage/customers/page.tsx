@@ -1,0 +1,2 @@
+import { StaffGate } from "@/components/staff-gate";
+export default function CustomersPage() { return <StaffGate permission="SALES"><main className="module-page"><p className="eyebrow">CUSTOMER RECORDS</p><h2>Customer relationships</h2><p>Customer records are created or updated by checkout and POS using a phone number as the practical lookup key. Purchases, outstanding balances, vehicles, payments, and service history remain linked.</p></main></StaffGate>; }

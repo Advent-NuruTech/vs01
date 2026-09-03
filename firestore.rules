@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function ownUser(userId) { return signedIn() && request.auth.uid == userId; }
+    function activeStaff() { return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true; }
+    match /products/{productId} { allow read: if resource.data.active == true || activeStaff(); allow write: if false; }
+    match /users/{userId} { allow read: if ownUser() || activeStaff(); allow create, update, delete: if false; }
+    match /customers/{customerId} { allow read: if activeStaff(); allow write: if false; }
+    match /orders/{orderId} { allow read: if activeStaff() || (signedIn() && resource.data.customerId == request.auth.uid); allow write: if false; }
+    match /{document=**} { allow read: if activeStaff(); allow write: if false; }
+  }
+}
