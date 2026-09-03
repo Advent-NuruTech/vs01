@@ -38,8 +38,7 @@ export function PublicNav({ home = false }: { home?: boolean }) {
           <Image src="/images/logo-transparent.png" alt="Vitour Xpress" width={150} height={80} priority />
         </Link>
 
-        <CartIcon count={cartQty} />
-
+        <div className={menu ? "pn-backdrop open" : "pn-backdrop"} onClick={() => setMenu(false)} />
         <nav className={menu ? "pn-nav open" : "pn-nav"}>
           {home ? (
             <>
@@ -57,9 +56,12 @@ export function PublicNav({ home = false }: { home?: boolean }) {
           )}
         </nav>
 
-        <button className="pn-menu-btn" onClick={() => setMenu(!menu)} aria-label="Toggle menu">
-          {menu ? "\u00d7" : "\u2630"}
-        </button>
+        <div className="pn-actions">
+          <CartIcon count={cartQty} />
+          <button className="pn-menu-btn" onClick={() => setMenu(!menu)} aria-label="Toggle menu">
+            {menu ? "\u00d7" : "\u2630"}
+          </button>
+        </div>
       </div>
     </header>
   );
