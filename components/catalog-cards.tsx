@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- Cloudinary provides the responsive delivery transform. */
 
 import Link from "next/link";
 import { useEffect, useState } from "react";

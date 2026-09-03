@@ -3,11 +3,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function ownUser(userId) { return signedIn() && request.auth.uid == userId; }
-    function activeStaff() { return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true; }
+    function activeStaff() { return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ["OWNER", "ADMIN", "CASHIER", "STOCK_MANAGER", "MECHANIC"]; }
     match /products/{productId} { allow read: if resource.data.active == true || activeStaff(); allow write: if false; }
     match /users/{userId} { allow read: if ownUser() || activeStaff(); allow create, update, delete: if false; }
     match /customers/{customerId} { allow read: if activeStaff(); allow write: if false; }
-    match /orders/{orderId} { allow read: if activeStaff() || (signedIn() && resource.data.customerId == request.auth.uid); allow write: if false; }
+    match /customerProfiles/{userId} { allow read: if ownUser(userId); allow write: if false; }
+    match /orders/{orderId} { allow read: if activeStaff() || (signedIn() && resource.data.customerUserId == request.auth.uid); allow write: if false; }
     match /{document=**} { allow read: if activeStaff(); allow write: if false; }
   }
 }

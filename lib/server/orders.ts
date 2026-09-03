@@ -10,7 +10,7 @@ export const checkoutSchema = z.object({
   paymentMethod: z.enum(["PAY_ON_PICKUP", "CASH", "MPESA"]),
 });
 
-export async function createOnlineOrder(input: z.infer<typeof checkoutSchema>) {
+export async function createOnlineOrder(input: z.infer<typeof checkoutSchema>, customerUserId?: string) {
   const db = adminDb();
   return db.runTransaction(async (transaction) => {
     const productRefs = input.lines.map((line) => db.collection("products").doc(line.productId));
@@ -36,7 +36,7 @@ export async function createOnlineOrder(input: z.infer<typeof checkoutSchema>) {
     const paymentRef = db.collection("payments").doc();
     transaction.set(counterRef, { orderSequence: number, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     transaction.set(customerRef, { ...input.customer, address: input.address, updatedAt: FieldValue.serverTimestamp(), ...(matches.empty ? { createdAt: FieldValue.serverTimestamp(), outstandingBalance: 0, totalPurchases: 0 } : {}) }, { merge: true });
-    transaction.set(orderRef, { orderNumber, customerId: customerRef.id, customer: input.customer, address: input.address, fulfilment: input.fulfilment, status: "NEW", paymentStatus: input.paymentMethod === "PAY_ON_PICKUP" ? "UNPAID" : "PENDING_CONFIRMATION", paymentMethod: input.paymentMethod, items: rows, subtotal: total, total, cogs: rows.reduce((sum, row) => sum + row.unitCostAtSale * row.quantity, 0), profit: rows.reduce((sum, row) => sum + row.profitAtSale, 0), source: "ONLINE", createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+    transaction.set(orderRef, { orderNumber, customerId: customerRef.id, customerUserId: customerUserId ?? null, customer: input.customer, address: input.address, fulfilment: input.fulfilment, status: "NEW", paymentStatus: input.paymentMethod === "PAY_ON_PICKUP" ? "UNPAID" : "PENDING_CONFIRMATION", paymentMethod: input.paymentMethod, items: rows, subtotal: total, total, cogs: rows.reduce((sum, row) => sum + row.unitCostAtSale * row.quantity, 0), profit: rows.reduce((sum, row) => sum + row.profitAtSale, 0), source: "ONLINE", createdAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
     transaction.set(paymentRef, { orderId: orderRef.id, amount: 0, method: input.paymentMethod, status: "PENDING", createdAt: Timestamp.now() });
     rows.forEach((row) => {
       const productRef = db.collection("products").doc(row.productId);
