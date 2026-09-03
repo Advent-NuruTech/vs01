@@ -10,8 +10,44 @@
   background: #fff;
 }
 
+.about-page section strong {
+  color: #263449;
+}
+
+.ceo-contact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 28px;
+  padding: 18px 20px;
+  border-left: 4px solid var(--red);
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(16, 42, 79, 0.07);
+}
+
+.ceo-contact span {
+  color: #687587;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ceo-contact a {
+  color: var(--blue);
+  font-size: 14px;
+  font-weight: 800;
+}
+
 @media (max-width: 640px) {
   .about-page img {
     height: 300px;
+  }
+
+  .ceo-contact {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
   }
 }
