@@ -2,24 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 import { CatalogCards } from "@/components/catalog-cards";
-import { readCart } from "@/lib/cart";
-import type { CartLine } from "@/lib/domain";
+import { PublicNav } from "@/components/public-nav";
 
 export default function Home() {
-  const [cart, setCart] = useState<CartLine[]>([]);
-  const [menu, setMenu] = useState(false);
   const [query, setQuery] = useState("");
   const [finder, setFinder] = useState({ width: "205", profile: "55", rim: "16" });
 
-  const cartQuantity = useMemo(() => cart.reduce((total, item) => total + item.quantity, 0), [cart]);
-  useEffect(() => {
-    const syncCart = () => setCart(readCart());
-    syncCart();
-    window.addEventListener("vitour-cart-change", syncCart);
-    return () => window.removeEventListener("vitour-cart-change", syncCart);
-  }, []);
   const findTyres = (event: FormEvent) => {
     event.preventDefault();
     setQuery(`${finder.width}/${finder.profile} R${finder.rim}`);
@@ -29,16 +19,7 @@ export default function Home() {
   return (
     <main>
       <div className="topbar"><div className="wrap topbar-inner"><span>Open today <strong>8:00 AM – 6:00 PM</strong></span><span className="top-contact">Need help? <a href="tel:+254700000000">+254 700 000 000</a></span></div></div>
-      <header className="header">
-        <div className="wrap nav">
-          <Link href="/" className="logo" aria-label="Vitour Xpress home"><Image src="/images/logo.webp" alt="Vitour Xpress — The Tyre Experts" width={260} height={138} priority /></Link>
-          <button className="menu-toggle" onClick={() => setMenu(!menu)} aria-label="Toggle menu">{menu ? "×" : "☰"}</button>
-          <nav className={menu ? "navlinks open" : "navlinks"}>
-            <a href="#shop" onClick={() => setMenu(false)}>Shop tyres</a><a href="#services" onClick={() => setMenu(false)}>Services</a><a href="#about" onClick={() => setMenu(false)}>Our story</a><a href="#contact" onClick={() => setMenu(false)}>Contact</a>
-          </nav>
-          <div className="nav-actions"><button className="search-button" onClick={() => document.getElementById("tyre-finder")?.scrollIntoView({ behavior: "smooth" })}>⌕ <span>Find tyres</span></button><Link className="basket" href="/cart">Bag <b>{cartQuantity}</b></Link></div>
-        </div>
-      </header>
+      <PublicNav home />
 
       <section className="hero"><div className="hero-grid" /><div className="wrap hero-content"><div className="hero-copy"><p className="eyebrow light">VITOUR XPRESS · KENYA</p><h1>Drive with <strong>confidence.</strong></h1><p className="hero-text">Quality tyres, precision fitting and honest automotive care. Get road-ready with the experts who keep Kenya moving.</p><div className="hero-buttons"><a href="#shop" className="button button-red">Shop tyres <span>→</span></a><a href="#services" className="button button-ghost">Explore services</a></div><div className="trust-row"><div><b>10,000+</b><span>Tyres fitted</span></div><div><b>4.9 / 5</b><span>Customer rating</span></div><div><b>6 days</b><span>Here for you</span></div></div></div><div className="hero-visual"><div className="speed-ring ring-one" /><div className="speed-ring ring-two" /><div className="wheel"><div className="wheel-inner"><span /><span /><span /><span /><span /></div></div><div className="floating-card"><span className="check">✓</span><div><b>Fitted with care</b><small>Expert installation included</small></div></div></div></div></section>
 
